@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "collaboration-portal-client-side-solution",
+    "id": "ac9b99fa-7f16-4537-bb98-1172db48af60",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "collaboration-portal description"
+      },
+      "longDescription": {
+        "default": "collaboration-portal description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "collaboration-portal Feature",
+        "description": "The feature that activates elements of the collaboration-portal solution.",
+        "id": "c853ee82-43b3-4e49-a777-a380c1025d80",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/collaboration-portal.sppkg"
+  }
+}
