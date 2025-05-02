@@ -3,7 +3,7 @@ import type {
   IDocumentMenuProps,
   IDocumentItem,
 } from "../interfaces/IDocumentMenuProps";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BaseService } from "../../../common/services/BaseService";
 import { DocumentMenuService } from "../services/DocumentMenuService";
 
@@ -15,17 +15,19 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     "/sites/ProductDevelopment/Shared Documents"
   );
   const [showModal, setShowModal] = useState(false);
+  const [breadCrumbItems, setBreadCrumbItems] = useState(["Documents"]);
 
   const libraryName = props.documentUrl
     ? props.documentUrl
     : "/sites/ProductDevelopment/Shared Documents";
   const documentMenuService = new DocumentMenuService(props.context);
   const baseService = new BaseService(props.context);
+  const pageCount = useRef(0);
 
   useEffect(() => {
     //Get all Folder information
-    baseService
-      .getAllFoldersAndFiles(libraryName)
+    documentMenuService
+      .getLibraryData(libraryName, 0)
       .then((data) => {
         console.log("Fetched library data:", data);
         // setLibraryData(data);
@@ -34,11 +36,46 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
       .catch((error) => console.error("Error fetching library data:", error));
   }, [props.context]);
 
+  // Handle next folder/file set
+  const handleNextFolderFileSet = async () => {
+    pageCount.current += 3;
+    documentMenuService
+      .getLibraryData(currentFolderPath, pageCount.current)
+      .then((data) => {
+        console.log("Fetched library data:", data);
+        // setLibraryData(data);
+        setCurrentItems(data);
+      })
+      .catch((error) => console.error("Error fetching library data:", error));
+  };
+
+  // Handle previous folder/file set
+  const handlePreviousFolderFileSet = async () => {
+    if (pageCount.current === 0) {
+      alert("No more previous folders or files.");
+      return;
+    }
+    pageCount.current -= 3;
+    documentMenuService
+      .getLibraryData(currentFolderPath, pageCount.current)
+      .then((data) => {
+        console.log("Fetched library data:", data);
+        // setLibraryData(data);
+        setCurrentItems(data);
+      })
+      .catch((error) => console.error("Error fetching library data:", error));
+  };
+
   // Handle folder click
   const handleFolderClick = (folder: IDocumentItem) => {
     if (folder.items) {
       setNavigationStack((prevStack) => [...prevStack, currentItems]); // Push the current level to the stack
       setCurrentItems(folder.items);
+      let newFolderName = folder.ServerRelativeUrl.split("/");
+      setBreadCrumbItems((prevItems) => [
+        ...prevItems,
+        newFolderName[newFolderName.length - 1],
+      ]); // Update breadcrumb items
       setCurrentFolderPath(folder.ServerRelativeUrl); // Set the current folder path
     }
   };
@@ -50,6 +87,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
       setNavigationStack((prevStack) => prevStack.slice(0, -1)); // Pop the last level from the stack
       setCurrentItems(previousLevel);
       setCurrentFolderPath(currentFolderPath.split("/").slice(0, -1).join("/")); // Update the current folder path
+      setBreadCrumbItems((prevItems) => prevItems.slice(0, -1)); // Remove the last breadcrumb item
     }
   };
 
@@ -65,7 +103,15 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
           Name: fileName,
           ServerRelativeUrl: `${currentFolderPath}/${fileName}`,
         };
-
+        for (const folderItems of navigationStack) {
+          const folder = folderItems.find(
+            (item) => item.Name === currentFolderPath.split("/").pop()
+          );
+          if (folder) {
+            folder.items = folder.items || [];
+            folder.items.push(newFile);
+          }
+        }
         setCurrentItems((prevItems) => [...prevItems, newFile]);
         alert("File created successfully!");
       } catch (error) {
@@ -97,7 +143,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
       ".vsdx",
     ];
 
-    // Set accept attribute to show only these files in dialog (optional)
+    // Set accept attribute to show only these files in dialog
     input.accept = allowedExtensions
       .map((ext) => `${ext},.${ext.toUpperCase()}`)
       .join(",");
@@ -125,7 +171,15 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
             Name: file.name,
             ServerRelativeUrl: `${currentFolderPath}/${file.name}`,
           };
-
+          for (const folderItems of navigationStack) {
+            const folder = folderItems.find(
+              (item) => item.Name === currentFolderPath.split("/").pop()
+            );
+            if (folder) {
+              folder.items = folder.items || [];
+              folder.items.push(newFile);
+            }
+          }
           setCurrentItems((prevItems) => [...prevItems, newFile]);
           alert("File uploaded successfully!");
         } catch (error) {
@@ -152,7 +206,15 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
           ServerRelativeUrl: `${currentFolderPath}/${folderName}`,
           items: [],
         };
-
+        for (const folderItems of navigationStack) {
+          const folder = folderItems.find(
+            (item) => item.Name === currentFolderPath.split("/").pop()
+          );
+          if (folder) {
+            folder.items = folder.items || [];
+            folder.items.push(newFolder);
+          }
+        }
         setCurrentItems((prevItems) => [...prevItems, newFolder]);
         alert("Folder created successfully!");
       } catch (error) {
@@ -169,25 +231,73 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     )}&action=default&mobileredirect=true`;
   };
 
-  // Function to count files in a folder and its nested folders
-  const countFilesInFolder = (folder: IDocumentItem): number => {
-    if (!folder.items || folder.items.length === 0) {
-      return 0;
-    }
+  const FileCount = ({ folderUrl }: { folderUrl: string }) => {
+    const [fileCount, setFileCount] = useState<number | null>(null);
 
-    return folder.items.reduce((count, item) => {
-      if (item.items) {
-        return count + countFilesInFolder(item);
-      } else {
-        return count + 1;
-      }
-    }, 0);
+    useEffect(() => {
+      const fetchFileCount = async () => {
+        try {
+          const count = await documentMenuService.getFileCountInFolder(
+            folderUrl
+          );
+          setFileCount(count);
+        } catch (error) {
+          console.error("Error fetching file count:", error);
+          setFileCount(null);
+        }
+      };
+
+      fetchFileCount();
+    }, [folderUrl]);
+
+    return <span>{fileCount !== null ? fileCount : "..."}</span>; // Show "..." while loading
+  };
+
+  // Render breadcrumb navigation
+  const renderBreadcrumb = () => {
+    // If there's no navigation, don't show anything
+    if (navigationStack.length === 0) {
+      return null;
+    }
+    return (
+      <React.Fragment>
+        {breadCrumbItems.map((item, index) => (
+          <React.Fragment key={index}>
+            {index > 0 && " > "}
+            <span onClick={() => handleBreadcrumbClick(index)}>{item}</span>
+          </React.Fragment>
+        ))}
+      </React.Fragment>
+    );
+  };
+
+  // Handle breadcrumb click
+  const handleBreadcrumbClick = (index: number) => {
+    // Navigate to a specific folder in the breadcrumb
+    if (index == 0) {
+      setBreadCrumbItems(["Documents"]);
+      setNavigationStack([]);
+      setCurrentItems(navigationStack[0]);
+      setCurrentFolderPath(libraryName);
+      return;
+    } else {
+      setCurrentItems(navigationStack[index]); // Get the items for the clicked level
+      setBreadCrumbItems((prevItems) => prevItems.slice(0, index + 1)); // Keep only the levels up to the clicked breadcrumb
+      setNavigationStack(
+        (prevStack) => prevStack.slice(0, index) // Keep only the levels up to the clicked breadcrumb
+      );
+      let segments = currentFolderPath.split("/");
+      let new_index = segments.indexOf(breadCrumbItems[index + 1]);
+      setCurrentFolderPath(segments.slice(0, new_index).join("/"));
+    }
   };
 
   const renderItems = (items: IDocumentItem[]) => {
     console.log(currentItems);
     console.log(currentFolderPath);
-    console.log(navigationStack);
+    console.log("nav", navigationStack);
+    console.log("pagecount : ", pageCount.current);
+    console.log("breadcrumb : ", breadCrumbItems);
     return (
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
         {items.map((item, index) => (
@@ -208,7 +318,12 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
               <>
                 <div style={{ fontSize: "24px" }}>📁</div>
                 <div>
-                  {item.Name} ({countFilesInFolder(item)} files)
+                  {item.Name} (
+                  <span>
+                    {/* Dynamically fetch and display file count */}
+                    <FileCount folderUrl={item.ServerRelativeUrl} />
+                  </span>{" "}
+                  files)
                 </div>
               </>
             ) : (
@@ -312,6 +427,10 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     <div>
       <h2>Document Library Contents</h2>
       <div style={{ marginBottom: "10px" }}>
+        {/* Render Breadcrumb */}
+        <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
+          {renderBreadcrumb()}
+        </div>
         <button
           onClick={() => setShowModal(true)}
           style={{
@@ -329,6 +448,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         <button
           onClick={handleCreateFolder}
           style={{
+            marginRight: "10px",
             background: "#2196F3",
             color: "white",
             border: "none",
@@ -338,6 +458,33 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
           }}
         >
           ➕ Create Folder
+        </button>
+        <button
+          onClick={handlePreviousFolderFileSet}
+          style={{
+            marginRight: "10px",
+            background: "#FF9800",
+            color: "white",
+            border: "none",
+            padding: "10px 15px",
+            cursor: "pointer",
+            borderRadius: "5px",
+          }}
+        >
+          ⏪ Back
+        </button>
+        <button
+          onClick={handleNextFolderFileSet}
+          style={{
+            background: "#FF9800",
+            color: "white",
+            border: "none",
+            padding: "10px 15px",
+            cursor: "pointer",
+            borderRadius: "5px",
+          }}
+        >
+          ⏩ Next
         </button>
       </div>
       {showModal && renderModal()}
