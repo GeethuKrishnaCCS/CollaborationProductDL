@@ -11,6 +11,6 @@ export interface IDocumentMenuProps {
 export interface IDocumentItem {
   Name: string;
   ServerRelativeUrl: string;
+  folder?: boolean;
   items?: IDocumentItem[];
 }
-

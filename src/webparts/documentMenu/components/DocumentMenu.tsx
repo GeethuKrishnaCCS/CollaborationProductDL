@@ -4,8 +4,10 @@ import type {
   IDocumentItem,
 } from "../interfaces/IDocumentMenuProps";
 import { useState, useEffect, useRef } from "react";
-import { BaseService } from "../../../common/services/BaseService";
+// import { BaseService } from "../../../common/services/BaseService";
 import { DocumentMenuService } from "../services/DocumentMenuService";
+import { TextField } from "@fluentui/react";
+import TileView from "../views/TileView";
 
 export default function DocumentMenu(props: IDocumentMenuProps) {
   // const [libraryData, setLibraryData] = useState<IDocumentItem[]>([]);
@@ -14,14 +16,16 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   const [currentFolderPath, setCurrentFolderPath] = useState(
     "/sites/ProductDevelopment/Shared Documents"
   );
-  const [showModal, setShowModal] = useState(false);
+  // const [currentSearchItems, setCurrentSearchItems] = useState<IDocumentItem[]>([]);
+  // const [showModal, setShowModal] = useState(false);
   const [breadCrumbItems, setBreadCrumbItems] = useState(["Documents"]);
+  const [searchValue, setSearchValue] = useState("");
 
   const libraryName = props.documentUrl
     ? props.documentUrl
     : "/sites/ProductDevelopment/Shared Documents";
   const documentMenuService = new DocumentMenuService(props.context);
-  const baseService = new BaseService(props.context);
+  // const baseService = new BaseService(props.context);
   const pageCount = useRef(0);
 
   useEffect(() => {
@@ -29,12 +33,49 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     documentMenuService
       .getLibraryData(libraryName, 0)
       .then((data) => {
-        console.log("Fetched library data:", data);
+        // console.log("Fetched library data:", data);
         // setLibraryData(data);
+        for (let item of data) {
+          if (item.folder) {
+            documentMenuService
+              .getLibraryDataWithoutSkip(item.ServerRelativeUrl)
+              .then((data) => {
+                item["items"] = data; // Initialize items array for folders
+                // console.log(currentItems);
+              })
+              .catch((error) => {
+                console.error("Error fetching folder data:", error);
+              });
+          }
+        }
         setCurrentItems(data);
       })
       .catch((error) => console.error("Error fetching library data:", error));
+
+    // documentMenuService.searchFilesAndFolders();
   }, [props.context]);
+
+  useEffect(() => {
+    const fetchFolderData = async () => {
+      if (currentItems) {
+        for (let item of currentItems) {
+          if (item.folder) {
+            try {
+              const data = await documentMenuService.getLibraryDataWithoutSkip(
+                item.ServerRelativeUrl
+              );
+              item["items"] = data; // Initialize items array for folders
+              console.log("Fetched folder data:", currentItems);
+            } catch (error) {
+              console.error("Error fetching folder data:", error);
+            }
+          }
+        }
+      }
+    };
+
+    fetchFolderData();
+  }, [currentItems]);
 
   // Handle next folder/file set
   const handleNextFolderFileSet = async () => {
@@ -91,138 +132,143 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     }
   };
 
-  // Handle file creation
-  const handleCreateFile = async () => {
-    let fileName = prompt("Enter the name of the new file:");
-    fileName += ".docx";
-    if (fileName) {
-      try {
-        documentMenuService.addNewFile(currentFolderPath, fileName);
+  // const retrieveNextLevelItems = async () => {
+  //   try {
 
-        const newFile: IDocumentItem = {
-          Name: fileName,
-          ServerRelativeUrl: `${currentFolderPath}/${fileName}`,
-        };
-        for (const folderItems of navigationStack) {
-          const folder = folderItems.find(
-            (item) => item.Name === currentFolderPath.split("/").pop()
-          );
-          if (folder) {
-            folder.items = folder.items || [];
-            folder.items.push(newFile);
-          }
-        }
-        setCurrentItems((prevItems) => [...prevItems, newFile]);
-        alert("File created successfully!");
-      } catch (error) {
-        console.error("Error creating file:", error);
-        alert("Failed to create file. Please try again.");
-      }
-    } else {
-      alert("Invalid file name. Only .docx files are supported for creation.");
-    }
-  };
+  //   } catch (error) { console.error("Error fetching subfolder items:", error);}}
+
+  // Handle file creation
+  // const handleCreateFile = async () => {
+  //   let fileName = prompt("Enter the name of the new file:");
+  //   fileName += ".docx";
+  //   if (fileName) {
+  //     try {
+  //       documentMenuService.addNewFile(currentFolderPath, fileName);
+
+  //       const newFile: IDocumentItem = {
+  //         Name: fileName,
+  //         ServerRelativeUrl: `${currentFolderPath}/${fileName}`,
+  //       };
+  //       for (const folderItems of navigationStack) {
+  //         const folder = folderItems.find(
+  //           (item) => item.Name === currentFolderPath.split("/").pop()
+  //         );
+  //         if (folder) {
+  //           folder.items = folder.items || [];
+  //           folder.items.push(newFile);
+  //         }
+  //       }
+  //       setCurrentItems((prevItems) => [...prevItems, newFile]);
+  //       alert("File created successfully!");
+  //     } catch (error) {
+  //       console.error("Error creating file:", error);
+  //       alert("Failed to create file. Please try again.");
+  //     }
+  //   } else {
+  //     alert("Invalid file name. Only .docx files are supported for creation.");
+  //   }
+  // };
 
   // Handle file upload
-  const handleUploadFile = async () => {
-    const input = document.createElement("input");
-    input.type = "file";
+  // const handleUploadFile = async () => {
+  //   const input = document.createElement("input");
+  //   input.type = "file";
 
-    const allowedExtensions = [
-      ".doc",
-      ".docx",
-      ".xls",
-      ".xlsx",
-      ".ppt",
-      ".pptx",
-      ".pdf",
-      ".txt",
-      ".csv",
-      ".one",
-      ".vsd",
-      ".vsdx",
-    ];
+  //   const allowedExtensions = [
+  //     ".doc",
+  //     ".docx",
+  //     ".xls",
+  //     ".xlsx",
+  //     ".ppt",
+  //     ".pptx",
+  //     ".pdf",
+  //     ".txt",
+  //     ".csv",
+  //     ".one",
+  //     ".vsd",
+  //     ".vsdx",
+  //   ];
 
-    // Set accept attribute to show only these files in dialog
-    input.accept = allowedExtensions
-      .map((ext) => `${ext},.${ext.toUpperCase()}`)
-      .join(",");
+  //   // Set accept attribute to show only these files in dialog
+  //   input.accept = allowedExtensions
+  //     .map((ext) => `${ext},.${ext.toUpperCase()}`)
+  //     .join(",");
 
-    input.onchange = async (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        try {
-          // Get file extension
-          const fileExtension = file.name.split(".").pop().toLowerCase();
+  //   input.onchange = async (event: any) => {
+  //     const file = event.target.files[0];
+  //     if (file) {
+  //       try {
+  //         // Get file extension
+  //         const fileExtension = file.name.split(".").pop().toLowerCase();
 
-          // Validate file type
-          if (!allowedExtensions.includes(`.${fileExtension}`)) {
-            alert(
-              `Invalid file type. Please upload only Microsoft Office files or PDFs. Allowed formats: ${allowedExtensions.join(
-                ", "
-              )}`
-            );
-            return;
-          }
+  //         // Validate file type
+  //         if (!allowedExtensions.includes(`.${fileExtension}`)) {
+  //           alert(
+  //             `Invalid file type. Please upload only Microsoft Office files or PDFs. Allowed formats: ${allowedExtensions.join(
+  //               ", "
+  //             )}`
+  //           );
+  //           return;
+  //         }
 
-          await baseService.uploadDocument(currentFolderPath, file.name, file);
+  //         await baseService.uploadDocument(currentFolderPath, file.name, file);
 
-          const newFile: IDocumentItem = {
-            Name: file.name,
-            ServerRelativeUrl: `${currentFolderPath}/${file.name}`,
-          };
-          for (const folderItems of navigationStack) {
-            const folder = folderItems.find(
-              (item) => item.Name === currentFolderPath.split("/").pop()
-            );
-            if (folder) {
-              folder.items = folder.items || [];
-              folder.items.push(newFile);
-            }
-          }
-          setCurrentItems((prevItems) => [...prevItems, newFile]);
-          alert("File uploaded successfully!");
-        } catch (error) {
-          console.error("Error uploading file:", error);
-          alert("Failed to upload file. Please try again.");
-        }
-      }
-    };
-    input.click();
-  };
+  //         const newFile: IDocumentItem = {
+  //           Name: file.name,
+  //           ServerRelativeUrl: `${currentFolderPath}/${file.name}`,
+  //         };
+  //         for (const folderItems of navigationStack) {
+  //           const folder = folderItems.find(
+  //             (item) => item.Name === currentFolderPath.split("/").pop()
+  //           );
+  //           if (folder) {
+  //             folder.items = folder.items || [];
+  //             folder.items.push(newFile);
+  //           }
+  //         }
+  //         setCurrentItems((prevItems) => [...prevItems, newFile]);
+  //         alert("File uploaded successfully!");
+  //       } catch (error) {
+  //         console.error("Error uploading file:", error);
+  //         alert("Failed to upload file. Please try again.");
+  //       }
+  //     }
+  //   };
+  //   input.click();
+  // };
 
   // Handle folder creation
-  const handleCreateFolder = async () => {
-    const folderName = prompt("Enter the name of the new folder:");
-    // const documentMenuService = new DocumentMenuService(props.context);
-    if (folderName) {
-      try {
-        await documentMenuService.addNewFolder(
-          `${currentFolderPath}/${folderName}`
-        );
+  // const handleCreateFolder = async () => {
+  //   const folderName = prompt("Enter the name of the new folder:");
+  //   // const documentMenuService = new DocumentMenuService(props.context);
+  //   if (folderName) {
+  //     try {
+  //       await documentMenuService.addNewFolder(
+  //         `${currentFolderPath}/${folderName}`
+  //       );
 
-        const newFolder: IDocumentItem = {
-          Name: folderName,
-          ServerRelativeUrl: `${currentFolderPath}/${folderName}`,
-          items: [],
-        };
-        for (const folderItems of navigationStack) {
-          const folder = folderItems.find(
-            (item) => item.Name === currentFolderPath.split("/").pop()
-          );
-          if (folder) {
-            folder.items = folder.items || [];
-            folder.items.push(newFolder);
-          }
-        }
-        setCurrentItems((prevItems) => [...prevItems, newFolder]);
-        alert("Folder created successfully!");
-      } catch (error) {
-        console.error("Error creating folder:", error);
-        alert("Failed to create folder. Please try again.");
-      }
-    }
-  };
+  //       const newFolder: IDocumentItem = {
+  //         Name: folderName,
+  //         ServerRelativeUrl: `${currentFolderPath}/${folderName}`,
+  //         items: [],
+  //       };
+  //       for (const folderItems of navigationStack) {
+  //         const folder = folderItems.find(
+  //           (item) => item.Name === currentFolderPath.split("/").pop()
+  //         );
+  //         if (folder) {
+  //           folder.items = folder.items || [];
+  //           folder.items.push(newFolder);
+  //         }
+  //       }
+  //       setCurrentItems((prevItems) => [...prevItems, newFolder]);
+  //       alert("Folder created successfully!");
+  //     } catch (error) {
+  //       console.error("Error creating folder:", error);
+  //       alert("Failed to create folder. Please try again.");
+  //     }
+  //   }
+  // };
 
   // Function to generate SharePoint file URL
   const getSharePointFileUrl = (serverRelativeUrl: string): string => {
@@ -292,8 +338,38 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     }
   };
 
+  const handlesearchValue = (value: string) => {
+    setSearchValue(value);
+
+    if (!value) {
+      // If the search value is empty, reset to the original items
+      documentMenuService
+        .getLibraryData(currentFolderPath, 0)
+        .then((data) => {
+          setCurrentItems(data);
+        })
+        .catch((error) => console.error("Error fetching library data:", error));
+      return;
+    }
+
+    // Perform search
+    documentMenuService
+      .searchFilesAndFolders(value, currentFolderPath)
+      .then((results) => {
+        setCurrentItems(results);
+      })
+      .catch((error) => {
+        console.error("Error searching files and folders:", error);
+      });
+
+    // const filteredItems = currentItems.filter((item) =>
+    //   item.Name.toLowerCase().includes(value.toLowerCase())
+    // );
+    // setCurrentItems(filteredItems);
+  };
+
   const renderItems = (items: IDocumentItem[]) => {
-    console.log(currentItems);
+    console.log("current items : ", currentItems);
     console.log(currentFolderPath);
     console.log("nav", navigationStack);
     console.log("pagecount : ", pageCount.current);
@@ -314,7 +390,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
             }}
             onClick={() => item.items && handleFolderClick(item)}
           >
-            {item.items ? (
+            {item.folder ? (
               <>
                 <div style={{ fontSize: "24px" }}>📁</div>
                 <div>
@@ -344,84 +420,84 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   };
 
   // Modal for file/folder creation
-  const renderModal = () => {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000,
-        }}
-      >
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "8px",
-            textAlign: "center",
-            width: "300px",
-          }}
-        >
-          <h3>Select an Action</h3>
-          <button
-            onClick={() => {
-              setShowModal(false);
-              handleCreateFile();
-            }}
-            style={{
-              margin: "10px",
-              background: "#4CAF50",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            ➕ Create File
-          </button>
-          <button
-            onClick={() => {
-              setShowModal(false);
-              handleUploadFile();
-            }}
-            style={{
-              margin: "10px",
-              background: "#2196F3",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            📤 Upload File
-          </button>
-          <button
-            onClick={() => setShowModal(false)}
-            style={{
-              marginTop: "10px",
-              background: "#f44336",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            ❌ Cancel
-          </button>
-        </div>
-      </div>
-    );
-  };
+  // const renderModal = () => {
+  //   return (
+  //     <div
+  //       style={{
+  //         position: "fixed",
+  //         top: "0",
+  //         left: "0",
+  //         width: "100%",
+  //         height: "100%",
+  //         backgroundColor: "rgba(0, 0, 0, 0.5)",
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //         zIndex: 1000,
+  //       }}
+  //     >
+  //       <div
+  //         style={{
+  //           background: "white",
+  //           padding: "20px",
+  //           borderRadius: "8px",
+  //           textAlign: "center",
+  //           width: "300px",
+  //         }}
+  //       >
+  //         <h3>Select an Action</h3>
+  //         <button
+  //           onClick={() => {
+  //             setShowModal(false);
+  //             handleCreateFile();
+  //           }}
+  //           style={{
+  //             margin: "10px",
+  //             background: "#4CAF50",
+  //             color: "white",
+  //             border: "none",
+  //             padding: "10px 15px",
+  //             cursor: "pointer",
+  //             borderRadius: "5px",
+  //           }}
+  //         >
+  //           ➕ Create File
+  //         </button>
+  //         <button
+  //           onClick={() => {
+  //             setShowModal(false);
+  //             handleUploadFile();
+  //           }}
+  //           style={{
+  //             margin: "10px",
+  //             background: "#2196F3",
+  //             color: "white",
+  //             border: "none",
+  //             padding: "10px 15px",
+  //             cursor: "pointer",
+  //             borderRadius: "5px",
+  //           }}
+  //         >
+  //           📤 Upload File
+  //         </button>
+  //         <button
+  //           onClick={() => setShowModal(false)}
+  //           style={{
+  //             marginTop: "10px",
+  //             background: "#f44336",
+  //             color: "white",
+  //             border: "none",
+  //             padding: "10px 15px",
+  //             cursor: "pointer",
+  //             borderRadius: "5px",
+  //           }}
+  //         >
+  //           ❌ Cancel
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // };
 
   return (
     <div>
@@ -431,7 +507,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
           {renderBreadcrumb()}
         </div>
-        <button
+        {/* <button
           onClick={() => setShowModal(true)}
           style={{
             marginRight: "10px",
@@ -458,7 +534,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
           }}
         >
           ➕ Create Folder
-        </button>
+        </button> */}
         <button
           onClick={handlePreviousFolderFileSet}
           style={{
@@ -486,8 +562,18 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         >
           ⏩ Next
         </button>
+
+        {/* Search Field */}
+        <div>
+          <TextField
+            placeholder="Search..."
+            value={searchValue}
+            onChange={(e, newValue) => handlesearchValue(newValue || "")}
+          />
+        </div>
       </div>
-      {showModal && renderModal()}
+
+      {/* {showModal && renderModal()} */}
       {navigationStack.length > 0 && (
         <button
           onClick={handleBackClick}
@@ -503,6 +589,17 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         </button>
       )}
       {renderItems(currentItems)}
+      <TileView
+        {...props}
+        currentItems={currentItems}
+        currentFolderPath={currentFolderPath}
+        navigationStack={navigationStack}
+        handleFolderClick={handleFolderClick}
+        getSharePointFileUrl={getSharePointFileUrl}
+        searchValue={searchValue}
+        handlesearchValue={handlesearchValue}
+        handleBackClick={handleBackClick}
+      />
     </div>
   );
 }
