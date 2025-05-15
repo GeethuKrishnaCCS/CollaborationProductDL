@@ -3,10 +3,9 @@ import type {
   IDocumentMenuProps,
   IDocumentItem,
 } from "../interfaces/IDocumentMenuProps";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 // import { BaseService } from "../../../common/services/BaseService";
 import { DocumentMenuService } from "../services/DocumentMenuService";
-import { TextField } from "@fluentui/react";
 import TileView from "../views/TileView";
 
 export default function DocumentMenu(props: IDocumentMenuProps) {
@@ -26,7 +25,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     : "/sites/ProductDevelopment/Shared Documents";
   const documentMenuService = new DocumentMenuService(props.context);
   // const baseService = new BaseService(props.context);
-  const pageCount = useRef(0);
+  // const pageCount = useRef(0);
 
   useEffect(() => {
     //Get all Folder information
@@ -77,35 +76,35 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     fetchFolderData();
   }, [currentItems]);
 
-  // Handle next folder/file set
-  const handleNextFolderFileSet = async () => {
-    pageCount.current += 3;
-    documentMenuService
-      .getLibraryData(currentFolderPath, pageCount.current)
-      .then((data) => {
-        console.log("Fetched library data:", data);
-        // setLibraryData(data);
-        setCurrentItems(data);
-      })
-      .catch((error) => console.error("Error fetching library data:", error));
-  };
+  //Handle next folder/file set
+  // const handleNextFolderFileSet = async () => {
+  //   pageCount.current += 3;
+  //   documentMenuService
+  //     .getLibraryData(currentFolderPath, pageCount.current)
+  //     .then((data) => {
+  //       console.log("Fetched library data:", data);
+  //       // setLibraryData(data);
+  //       setCurrentItems(data);
+  //     })
+  //     .catch((error) => console.error("Error fetching library data:", error));
+  // };
 
   // Handle previous folder/file set
-  const handlePreviousFolderFileSet = async () => {
-    if (pageCount.current === 0) {
-      alert("No more previous folders or files.");
-      return;
-    }
-    pageCount.current -= 3;
-    documentMenuService
-      .getLibraryData(currentFolderPath, pageCount.current)
-      .then((data) => {
-        console.log("Fetched library data:", data);
-        // setLibraryData(data);
-        setCurrentItems(data);
-      })
-      .catch((error) => console.error("Error fetching library data:", error));
-  };
+  // const handlePreviousFolderFileSet = async () => {
+  //   if (pageCount.current === 0) {
+  //     alert("No more previous folders or files.");
+  //     return;
+  //   }
+  //   pageCount.current -= 3;
+  //   documentMenuService
+  //     .getLibraryData(currentFolderPath, pageCount.current)
+  //     .then((data) => {
+  //       console.log("Fetched library data:", data);
+  //       // setLibraryData(data);
+  //       setCurrentItems(data);
+  //     })
+  //     .catch((error) => console.error("Error fetching library data:", error));
+  // };
 
   // Handle folder click
   const handleFolderClick = (folder: IDocumentItem) => {
@@ -277,33 +276,11 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     )}&action=default&mobileredirect=true`;
   };
 
-  const FileCount = ({ folderUrl }: { folderUrl: string }) => {
-    const [fileCount, setFileCount] = useState<number | null>(null);
-
-    useEffect(() => {
-      const fetchFileCount = async () => {
-        try {
-          const count = await documentMenuService.getFileCountInFolder(
-            folderUrl
-          );
-          setFileCount(count);
-        } catch (error) {
-          console.error("Error fetching file count:", error);
-          setFileCount(null);
-        }
-      };
-
-      fetchFileCount();
-    }, [folderUrl]);
-
-    return <span>{fileCount !== null ? fileCount : "..."}</span>; // Show "..." while loading
-  };
-
   // Render breadcrumb navigation
   const renderBreadcrumb = () => {
     // If there's no navigation, don't show anything
     if (navigationStack.length === 0) {
-      return null;
+      return <div />;
     }
     return (
       <React.Fragment>
@@ -368,227 +345,8 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     // setCurrentItems(filteredItems);
   };
 
-  const renderItems = (items: IDocumentItem[]) => {
-    console.log("current items : ", currentItems);
-    console.log(currentFolderPath);
-    console.log("nav", navigationStack);
-    console.log("pagecount : ", pageCount.current);
-    console.log("breadcrumb : ", breadCrumbItems);
-    return (
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-        {items.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              padding: "10px",
-              textAlign: "center",
-              width: "150px",
-              cursor: "pointer",
-              backgroundColor: item.items ? "#f0f8ff" : "#fff",
-            }}
-            onClick={() => item.items && handleFolderClick(item)}
-          >
-            {item.folder ? (
-              <>
-                <div style={{ fontSize: "24px" }}>📁</div>
-                <div>
-                  {item.Name} (
-                  <span>
-                    {/* Dynamically fetch and display file count */}
-                    <FileCount folderUrl={item.ServerRelativeUrl} />
-                  </span>{" "}
-                  files)
-                </div>
-              </>
-            ) : (
-              <a
-                href={getSharePointFileUrl(item.ServerRelativeUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <div style={{ fontSize: "24px" }}>📄</div>
-                <div>{item.Name}</div>
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Modal for file/folder creation
-  // const renderModal = () => {
-  //   return (
-  //     <div
-  //       style={{
-  //         position: "fixed",
-  //         top: "0",
-  //         left: "0",
-  //         width: "100%",
-  //         height: "100%",
-  //         backgroundColor: "rgba(0, 0, 0, 0.5)",
-  //         display: "flex",
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //         zIndex: 1000,
-  //       }}
-  //     >
-  //       <div
-  //         style={{
-  //           background: "white",
-  //           padding: "20px",
-  //           borderRadius: "8px",
-  //           textAlign: "center",
-  //           width: "300px",
-  //         }}
-  //       >
-  //         <h3>Select an Action</h3>
-  //         <button
-  //           onClick={() => {
-  //             setShowModal(false);
-  //             handleCreateFile();
-  //           }}
-  //           style={{
-  //             margin: "10px",
-  //             background: "#4CAF50",
-  //             color: "white",
-  //             border: "none",
-  //             padding: "10px 15px",
-  //             cursor: "pointer",
-  //             borderRadius: "5px",
-  //           }}
-  //         >
-  //           ➕ Create File
-  //         </button>
-  //         <button
-  //           onClick={() => {
-  //             setShowModal(false);
-  //             handleUploadFile();
-  //           }}
-  //           style={{
-  //             margin: "10px",
-  //             background: "#2196F3",
-  //             color: "white",
-  //             border: "none",
-  //             padding: "10px 15px",
-  //             cursor: "pointer",
-  //             borderRadius: "5px",
-  //           }}
-  //         >
-  //           📤 Upload File
-  //         </button>
-  //         <button
-  //           onClick={() => setShowModal(false)}
-  //           style={{
-  //             marginTop: "10px",
-  //             background: "#f44336",
-  //             color: "white",
-  //             border: "none",
-  //             padding: "10px 15px",
-  //             cursor: "pointer",
-  //             borderRadius: "5px",
-  //           }}
-  //         >
-  //           ❌ Cancel
-  //         </button>
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
   return (
     <div>
-      <h2>Document Library Contents</h2>
-      <div style={{ marginBottom: "10px" }}>
-        {/* Render Breadcrumb */}
-        <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
-          {renderBreadcrumb()}
-        </div>
-        {/* <button
-          onClick={() => setShowModal(true)}
-          style={{
-            marginRight: "10px",
-            background: "#4CAF50",
-            color: "white",
-            border: "none",
-            padding: "10px 15px",
-            cursor: "pointer",
-            borderRadius: "5px",
-          }}
-        >
-          ➕ Create/Upload File
-        </button>
-        <button
-          onClick={handleCreateFolder}
-          style={{
-            marginRight: "10px",
-            background: "#2196F3",
-            color: "white",
-            border: "none",
-            padding: "10px 15px",
-            cursor: "pointer",
-            borderRadius: "5px",
-          }}
-        >
-          ➕ Create Folder
-        </button> */}
-        <button
-          onClick={handlePreviousFolderFileSet}
-          style={{
-            marginRight: "10px",
-            background: "#FF9800",
-            color: "white",
-            border: "none",
-            padding: "10px 15px",
-            cursor: "pointer",
-            borderRadius: "5px",
-          }}
-        >
-          ⏪ Back
-        </button>
-        <button
-          onClick={handleNextFolderFileSet}
-          style={{
-            background: "#FF9800",
-            color: "white",
-            border: "none",
-            padding: "10px 15px",
-            cursor: "pointer",
-            borderRadius: "5px",
-          }}
-        >
-          ⏩ Next
-        </button>
-
-        {/* Search Field */}
-        <div>
-          <TextField
-            placeholder="Search..."
-            value={searchValue}
-            onChange={(e, newValue) => handlesearchValue(newValue || "")}
-          />
-        </div>
-      </div>
-
-      {/* {showModal && renderModal()} */}
-      {navigationStack.length > 0 && (
-        <button
-          onClick={handleBackClick}
-          style={{
-            marginBottom: "10px",
-            background: "none",
-            border: "1px solid #ccc",
-            padding: "5px 10px",
-            cursor: "pointer",
-          }}
-        >
-          🔙 Back
-        </button>
-      )}
-      {renderItems(currentItems)}
       <TileView
         {...props}
         currentItems={currentItems}
@@ -599,6 +357,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         searchValue={searchValue}
         handlesearchValue={handlesearchValue}
         handleBackClick={handleBackClick}
+        renderBreadcrumb={renderBreadcrumb}
       />
     </div>
   );

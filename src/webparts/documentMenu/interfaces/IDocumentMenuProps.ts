@@ -5,6 +5,7 @@ export interface IDocumentMenuProps {
   description: string;
   userDisplayName: string;
   documentUrl: string;
+  layoutDropdown: string;
 }
 
 // This interface is used to define the structure of the document item

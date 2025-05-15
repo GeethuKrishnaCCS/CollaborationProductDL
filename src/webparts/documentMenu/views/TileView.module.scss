@@ -1,0 +1,188 @@
+.MainContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.Header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  background-color: #e7fbfa;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.SearchField {
+  display: flex;
+  align-items: center;
+  width: 400px;
+}
+
+.ContentContainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.FolderAndFileContainer {
+  display: grid;
+  align-items: space-around;
+  justify-items: center;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  // grid-template-rows: repeat(auto-fill, minmax(150px, 1fr));
+  // flex-wrap: wrap;
+  justify-content: center;
+  // align-items: center;
+  gap: 10px;
+  width: 80%;
+}
+
+.ItemContainer {
+  height: 150px;
+  width: 150px;
+  border-radius: 30px;
+  padding: 10px;
+  background-color: #e7fbfa;
+  cursor: pointer;
+}
+
+.FolderContainer {
+  height: 100%;
+  width: 100%;
+}
+
+.FolderIcon {
+  height: 80%;
+  width: 100%;
+  background-image: url("../assets/open-folder3.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 80%;
+  position: relative;
+}
+
+.FileCount {
+  height: 50%;
+  width: 50%;
+  // background-color: yellow;
+  position: absolute;
+  right: 20%;
+  bottom: 15%;
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.FolderName {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.FileContainer {
+  height: 100%;
+  width: 100%;
+}
+
+.PdfIcon {
+  height: 80%;
+  width: 100%;
+  background-image: url("../assets/pdf-icon.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 80%;
+  position: relative;
+}
+
+.DocxIcon {
+  height: 80%;
+  width: 100%;
+  background-image: url("../assets/doc-icon.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%;
+  position: relative;
+  display: flex;
+}
+
+.XlsxIcon {
+  height: 80%;
+  width: 100%;
+  background-image: url("../assets/excel-icon.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%;
+  position: relative;
+  display: flex;
+}
+
+.DefaultIcon {
+  height: 80%;
+  width: 100%;
+  background-image: url("../assets/open-folder3.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%;
+  position: relative;
+  display: flex;
+}
+
+.FileName {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.ArrowPrevious {
+  height: 100px;
+  width: 40px;
+  background-image: url("../assets/left-arrow.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 80%;
+  // position: relative;
+  border: none;
+  border-radius: 5px;
+  background-color: #e7fbfa;
+  // padding: 10px 15px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.ArrowNext {
+  height: 100px;
+  width: 40px;
+  background-image: url("../assets/right-arrow.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 80%;
+  // position: relative;
+  border: none;
+  border-radius: 5px;
+  background-color: #e7fbfa;
+  // padding: 10px 15px;
+  margin-left: 10px;
+  cursor: pointer;
+}
