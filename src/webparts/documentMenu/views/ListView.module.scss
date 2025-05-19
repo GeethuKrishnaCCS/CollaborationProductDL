@@ -1,0 +1,135 @@
+.MainListViewContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.ListViewContentContainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.ListTable {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #e7fbfa;
+  border-radius: 10px;
+}
+
+.ListTableHeader {
+  width: 100%;
+  height: 50px;
+  //   display: flex;
+
+  .FileTypeIcon {
+    width: 7%;
+    background-image: url(../assets/files-icon.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 30%;
+  }
+  .HeaderName {
+    width: 68%;
+  }
+
+  .HeaderLastAccessed {
+    width: 25%;
+  }
+}
+
+.ListTable th {
+  padding: 0;
+}
+
+.ListTable td {
+  padding: 0;
+  text-align: left;
+}
+.ListTableRow {
+  width: 100%;
+  height: 50px;
+  border-top: 1px solid #4fd7c4;
+  border-bottom-left-radius: 10px;
+}
+
+.OpenLink {
+  color: #0078d4;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.FolderName {
+  color: #333;
+}
+
+.FileName {
+  color: #555;
+}
+
+.FileTypeIconContainer {
+  height: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom-left-radius: 10px;
+
+  .PdfIcon {
+    height: 100%;
+    width: 100%;
+    background-image: url(../assets/pdf-icon.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 30%;
+    border-bottom-left-radius: 10px;
+  }
+
+  .DocxIcon {
+    height: 100%;
+    width: 100%;
+    background-image: url(../assets/doc-icon.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 30%;
+    border-bottom-left-radius: 10px;
+  }
+
+  .XlsxIcon {
+    height: 100%;
+    width: 100%;
+    background-image: url(../assets/excel-icon.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 30%;
+    border-bottom-left-radius: 10px;
+  }
+  .DefaultFolderIcon {
+    height: 100%;
+    width: 100%;
+    background-image: url(../assets/open-folder3.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 30%;
+    border-bottom-left-radius: 10px;
+  }
+}
+
+.FileNameContainer {
+  width: 65%;
+}
+
+.LastAccessedContainer {
+  width: 25%;
+  border-bottom-right-radius: 10px;
+}

@@ -1,4 +1,4 @@
-.MainContainer {
+.MainTileViewContainer {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -8,24 +8,7 @@
   background-color: #ffffff;
 }
 
-.Header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 10px;
-  background-color: #e7fbfa;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
-.SearchField {
-  display: flex;
-  align-items: center;
-  width: 400px;
-}
-
-.ContentContainer {
+.TileViewContentContainer {
   width: 100%;
   display: flex;
   align-items: center;

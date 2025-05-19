@@ -25,9 +25,13 @@ export class DocumentMenuService extends BaseService {
       folder.files.top(3).skip(skip)(),
     ]);
 
+    console.log("subfolders", subfolders);
+    console.log("files", files);
+
     let allItems: FolderItem[] = files.map((file: any) => ({
       Name: file.Name,
       ServerRelativeUrl: file.ServerRelativeUrl,
+      LastAccessed: file.TimeLastModified,
       folder: false,
     }));
 
@@ -40,6 +44,7 @@ export class DocumentMenuService extends BaseService {
         return {
           Name: subfolder.Name,
           ServerRelativeUrl: subfolder.ServerRelativeUrl,
+          LastAccessed: subfolder.TimeLastModified,
           folder: true,
         };
       });
@@ -61,6 +66,7 @@ export class DocumentMenuService extends BaseService {
     let allItems: FolderItem[] = files.map((file: any) => ({
       Name: file.Name,
       ServerRelativeUrl: file.ServerRelativeUrl,
+      LastAccessed: file.TimeLastModified,
       folder: false,
     }));
 
@@ -73,6 +79,7 @@ export class DocumentMenuService extends BaseService {
         return {
           Name: subfolder.Name,
           ServerRelativeUrl: subfolder.ServerRelativeUrl,
+          LastAccessed: subfolder.TimeLastModified,
           folder: true,
         };
       });
@@ -191,6 +198,7 @@ export class DocumentMenuService extends BaseService {
               /^https?:\/\/[^/]+/,
               ""
             ),
+            LastAccessed: item.LastModifiedTime,
             folder: true,
             // items: subItems,
           };
@@ -201,6 +209,7 @@ export class DocumentMenuService extends BaseService {
               /^https?:\/\/[^/]+/,
               ""
             ), // Fallback to Path
+            LastAccessed: item.LastModifiedTime,
             folder: false,
           };
         }

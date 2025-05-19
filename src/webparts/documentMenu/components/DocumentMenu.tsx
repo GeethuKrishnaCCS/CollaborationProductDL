@@ -3,10 +3,50 @@ import type {
   IDocumentMenuProps,
   IDocumentItem,
 } from "../interfaces/IDocumentMenuProps";
+import styles from "./DocumentMenu.module.scss";
 import { useState, useEffect } from "react";
 // import { BaseService } from "../../../common/services/BaseService";
 import { DocumentMenuService } from "../services/DocumentMenuService";
 import TileView from "../views/TileView";
+import {
+  TextField,
+  ITextFieldStyles,
+  IStyleFunctionOrObject,
+  ITextFieldStyleProps,
+} from "@fluentui/react";
+import ListView from "../views/ListView";
+
+const searchFieldStyles: IStyleFunctionOrObject<
+  ITextFieldStyleProps,
+  ITextFieldStyles
+> = {
+  fieldGroup: {
+    height: "40px", // Set height
+    width: "400px", // Set width
+    backgroundColor: "#FFFFFF", // Set background color
+    border: "1px solid #C8EFFE", // Set border color
+    borderRadius: "10px",
+    selectors: {
+      "::after": {
+        border: "none",
+        borderRadius: "10px",
+      },
+      ":focus-within": {
+        border: "1px solid rgb(177, 217, 233)",
+        borderRadius: "10px",
+      },
+      ":focus": {
+        border: "none",
+      },
+      ":active": {
+        border: "none",
+      },
+      ":hover": {
+        border: "1px solid rgb(177, 217, 233)",
+      },
+    },
+  },
+};
 
 export default function DocumentMenu(props: IDocumentMenuProps) {
   // const [libraryData, setLibraryData] = useState<IDocumentItem[]>([]);
@@ -19,6 +59,9 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   // const [showModal, setShowModal] = useState(false);
   const [breadCrumbItems, setBreadCrumbItems] = useState(["Documents"]);
   const [searchValue, setSearchValue] = useState("");
+  const [activeListTileLayout, setActiveListTileLayout] = useState<
+    "tile" | "list"
+  >("tile");
 
   const libraryName = props.documentUrl
     ? props.documentUrl
@@ -347,6 +390,93 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
 
   return (
     <div>
+      <div className={styles.Header}>
+        {/* Render Breadcrumb */}
+        {/* <button
+                  onClick={() => setShowModal(true)}
+                  style={{
+                    marginRight: "10px",
+                    background: "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "10px 15px",
+                    cursor: "pointer",
+                    borderRadius: "5px",
+                  }}
+                >
+                  ➕ Create/Upload File
+                </button>
+                <button
+                  onClick={handleCreateFolder}
+                  style={{
+                    marginRight: "10px",
+                    background: "#2196F3",
+                    color: "white",
+                    border: "none",
+                    padding: "10px 15px",
+                    cursor: "pointer",
+                    borderRadius: "5px",
+                  }}
+                >
+                  ➕ Create Folder
+                </button> */}
+        {/* <div>
+          <button
+            // onClick={handlePreviousFolderFileSet}
+            style={{
+              marginRight: "10px",
+              background: "#FF9800",
+              color: "white",
+              border: "none",
+              padding: "10px 15px",
+              cursor: "pointer",
+              borderRadius: "5px",
+            }}
+          >
+            ⏪ Back
+          </button>
+          <button
+            // onClick={handleNextFolderFileSet}
+            style={{
+              background: "#FF9800",
+              color: "white",
+              border: "none",
+              padding: "10px 15px",
+              cursor: "pointer",
+              borderRadius: "5px",
+            }}
+          >
+            ⏩ Next
+          </button>
+        </div> */}
+        {/* Search Field */}
+        <div className={styles.SearchField}>
+          <TextField
+            styles={searchFieldStyles}
+            placeholder="Search..."
+            value={searchValue}
+            onChange={(e, newValue) => handlesearchValue(newValue || "")}
+          />
+        </div>
+        <div className={styles.ListTileLayoutButtons}>
+          <button
+            className={
+              activeListTileLayout === "list"
+                ? styles.ListButtonActive
+                : styles.ListButtonInactive
+            }
+            onClick={() => setActiveListTileLayout("list")}
+          ></button>
+          <button
+            className={
+              activeListTileLayout === "tile"
+                ? styles.TileButtonActive
+                : styles.TileButtonInactive
+            }
+            onClick={() => setActiveListTileLayout("tile")}
+          ></button>
+        </div>
+      </div>
       <TileView
         {...props}
         currentItems={currentItems}
@@ -354,8 +484,16 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         navigationStack={navigationStack}
         handleFolderClick={handleFolderClick}
         getSharePointFileUrl={getSharePointFileUrl}
-        searchValue={searchValue}
-        handlesearchValue={handlesearchValue}
+        handleBackClick={handleBackClick}
+        renderBreadcrumb={renderBreadcrumb}
+      />
+      <ListView
+        {...props}
+        currentItems={currentItems}
+        currentFolderPath={currentFolderPath}
+        navigationStack={navigationStack}
+        handleFolderClick={handleFolderClick}
+        getSharePointFileUrl={getSharePointFileUrl}
         handleBackClick={handleBackClick}
         renderBreadcrumb={renderBreadcrumb}
       />

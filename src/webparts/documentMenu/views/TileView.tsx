@@ -1,12 +1,6 @@
 import * as React from "react";
 import styles from "./TileView.module.scss";
 import { useState, useEffect } from "react";
-import {
-  TextField,
-  ITextFieldStyles,
-  IStyleFunctionOrObject,
-  ITextFieldStyleProps,
-} from "@fluentui/react";
 import { DocumentMenuService } from "../services/DocumentMenuService";
 import {
   IDocumentItem,
@@ -19,43 +13,9 @@ interface ITileViewProps extends IDocumentMenuProps {
   navigationStack: IDocumentItem[][];
   handleFolderClick: (item: IDocumentItem) => void;
   getSharePointFileUrl: (url: string) => string;
-  searchValue: string;
-  handlesearchValue: (value: string) => void;
   handleBackClick: () => void;
   renderBreadcrumb: () => JSX.Element;
 }
-
-const searchFieldStyles: IStyleFunctionOrObject<
-  ITextFieldStyleProps,
-  ITextFieldStyles
-> = {
-  fieldGroup: {
-    height: "40px", // Set height
-    width: "400px", // Set width
-    backgroundColor: "#FFFFFF", // Set background color
-    border: "1px solid #C8EFFE", // Set border color
-    borderRadius: "10px",
-    selectors: {
-      "::after": {
-        border: "none",
-        borderRadius: "10px",
-      },
-      ":focus-within": {
-        border: "1px solid rgb(177, 217, 233)",
-        borderRadius: "10px",
-      },
-      ":focus": {
-        border: "none",
-      },
-      ":active": {
-        border: "none",
-      },
-      ":hover": {
-        border: "1px solid rgb(177, 217, 233)",
-      },
-    },
-  },
-};
 
 export default function TileView(props: ITileViewProps) {
   const {
@@ -63,8 +23,6 @@ export default function TileView(props: ITileViewProps) {
     currentItems,
     handleFolderClick,
     getSharePointFileUrl,
-    handlesearchValue,
-    searchValue,
     handleBackClick,
     renderBreadcrumb,
   } = props;
@@ -87,82 +45,13 @@ export default function TileView(props: ITileViewProps) {
       };
 
       fetchFileCount();
-    }, [folderUrl]);
+    }, [currentItems]);
 
     return <span>{fileCount !== null ? fileCount : "..."}</span>; // Show "..." while loading
   };
 
   return (
-    <div className={styles.MainContainer}>
-      <div className={styles.Header}>
-        {/* Render Breadcrumb */}
-        {/* <button
-                  onClick={() => setShowModal(true)}
-                  style={{
-                    marginRight: "10px",
-                    background: "#4CAF50",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 15px",
-                    cursor: "pointer",
-                    borderRadius: "5px",
-                  }}
-                >
-                  ➕ Create/Upload File
-                </button>
-                <button
-                  onClick={handleCreateFolder}
-                  style={{
-                    marginRight: "10px",
-                    background: "#2196F3",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 15px",
-                    cursor: "pointer",
-                    borderRadius: "5px",
-                  }}
-                >
-                  ➕ Create Folder
-                </button> */}
-        <div>
-          <button
-            // onClick={handlePreviousFolderFileSet}
-            style={{
-              marginRight: "10px",
-              background: "#FF9800",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            ⏪ Back
-          </button>
-          <button
-            // onClick={handleNextFolderFileSet}
-            style={{
-              background: "#FF9800",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            ⏩ Next
-          </button>
-        </div>
-        {/* Search Field */}
-        <div className={styles.SearchField}>
-          <TextField
-            styles={searchFieldStyles}
-            placeholder="Search..."
-            value={searchValue}
-            onChange={(e, newValue) => handlesearchValue(newValue || "")}
-          />
-        </div>
-      </div>
+    <div className={styles.MainTileViewContainer}>
       {/* {showModal && renderModal()} */}
       <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
         {renderBreadcrumb()}
@@ -181,7 +70,7 @@ export default function TileView(props: ITileViewProps) {
           🔙 Back
         </button>
       )}
-      <div className={styles.ContentContainer}>
+      <div className={styles.TileViewContentContainer}>
         <button
           // onClick={handlePreviousFolderFileSet}
           className={styles.ArrowPrevious}
