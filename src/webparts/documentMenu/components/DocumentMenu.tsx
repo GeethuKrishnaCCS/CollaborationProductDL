@@ -4,7 +4,7 @@ import type {
   IDocumentItem,
 } from "../interfaces/IDocumentMenuProps";
 import styles from "./DocumentMenu.module.scss";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 // import { BaseService } from "../../../common/services/BaseService";
 import { DocumentMenuService } from "../services/DocumentMenuService";
 import TileView from "../views/TileView";
@@ -15,6 +15,9 @@ import {
   ITextFieldStyleProps,
 } from "@fluentui/react";
 import ListView from "../views/ListView";
+import IconView from "../views/IconView";
+import debounce from "lodash/debounce";
+import { Spinner } from "@fluentui/react/lib/Spinner";
 
 const searchFieldStyles: IStyleFunctionOrObject<
   ITextFieldStyleProps,
@@ -53,7 +56,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   const [currentItems, setCurrentItems] = useState<IDocumentItem[]>([]); // Items to display at the current level
   const [navigationStack, setNavigationStack] = useState<IDocumentItem[][]>([]); // Stack to track navigation levels
   const [currentFolderPath, setCurrentFolderPath] = useState(
-    "/sites/ProductDevelopment/Shared Documents"
+    props.documentLibraryUrl ? props.documentLibraryUrl : ""
   );
   // const [currentSearchItems, setCurrentSearchItems] = useState<IDocumentItem[]>([]);
   // const [showModal, setShowModal] = useState(false);
@@ -62,15 +65,34 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   const [activeListTileLayout, setActiveListTileLayout] = useState<
     "tile" | "list"
   >("tile");
+  const [activeIconLayout, setActiveIconLayout] = useState<"icon" | "list">(
+    "icon"
+  );
+  const [loading, setLoading] = useState(false);
 
-  const libraryName = props.documentUrl
-    ? props.documentUrl
-    : "/sites/ProductDevelopment/Shared Documents";
-  const documentMenuService = new DocumentMenuService(props.context);
+  const libraryName = props.documentLibraryUrl ? props.documentLibraryUrl : "";
+  const documentMenuService = new DocumentMenuService(
+    props.context,
+    props.siteCollectionUrl
+  );
+  const [paginationStack, setPaginationStack] = useState<IDocumentItem[][]>([]);
+  // const [pageCount, setPageCount] = useState(0);
   // const baseService = new BaseService(props.context);
-  // const pageCount = useRef(0);
+  const pageCount = useRef(0);
 
   useEffect(() => {
+    console.log(
+      "libraryName:",
+      libraryName,
+      "props.siteCollectionUrl:",
+      props.siteCollectionUrl
+    );
+    if (libraryName === "" || props.siteCollectionUrl === "") {
+      setCurrentItems([]);
+      console.log("Document library URL is not provided.");
+      return;
+    }
+
     //Get all Folder information
     documentMenuService
       .getLibraryData(libraryName, 0)
@@ -91,11 +113,12 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
           }
         }
         setCurrentItems(data);
+        setNavigationStack([data]);
       })
       .catch((error) => console.error("Error fetching library data:", error));
 
     // documentMenuService.searchFilesAndFolders();
-  }, [props.context]);
+  }, [props.documentLibraryUrl, props.siteCollectionUrl]);
 
   useEffect(() => {
     const fetchFolderData = async () => {
@@ -107,7 +130,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
                 item.ServerRelativeUrl
               );
               item["items"] = data; // Initialize items array for folders
-              console.log("Fetched folder data:", currentItems);
+              // console.log("Fetched folder data:", currentItems);
             } catch (error) {
               console.error("Error fetching folder data:", error);
             }
@@ -117,42 +140,56 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     };
 
     fetchFolderData();
+    props.onCurrentItemsChange && props.onCurrentItemsChange(currentItems);
   }, [currentItems]);
 
+  useEffect(() => {
+    props.onLayoutStateChange &&
+      props.onLayoutStateChange(activeIconLayout, navigationStack.length);
+  }, [activeIconLayout, navigationStack.length]);
+
   //Handle next folder/file set
-  // const handleNextFolderFileSet = async () => {
-  //   pageCount.current += 3;
-  //   documentMenuService
-  //     .getLibraryData(currentFolderPath, pageCount.current)
-  //     .then((data) => {
-  //       console.log("Fetched library data:", data);
-  //       // setLibraryData(data);
-  //       setCurrentItems(data);
-  //     })
-  //     .catch((error) => console.error("Error fetching library data:", error));
-  // };
+  const handleNextFolderFileSet = async () => {
+    pageCount.current += 5; // Increment page count
+    setPaginationStack((prevStack) => [...prevStack, currentItems]); // Push the current items to the stack
+    documentMenuService
+      .getLibraryData(currentFolderPath, pageCount.current)
+      .then((data) => {
+        console.log("Fetched library data:", data);
+        // setLibraryData(data);
+        setCurrentItems(data);
+      })
+      .catch((error) => console.error("Error fetching library data:", error));
+  };
 
   // Handle previous folder/file set
-  // const handlePreviousFolderFileSet = async () => {
-  //   if (pageCount.current === 0) {
-  //     alert("No more previous folders or files.");
-  //     return;
-  //   }
-  //   pageCount.current -= 3;
-  //   documentMenuService
-  //     .getLibraryData(currentFolderPath, pageCount.current)
-  //     .then((data) => {
-  //       console.log("Fetched library data:", data);
-  //       // setLibraryData(data);
-  //       setCurrentItems(data);
-  //     })
-  //     .catch((error) => console.error("Error fetching library data:", error));
-  // };
+  const handlePreviousFolderFileSet = async () => {
+    if (pageCount.current === 0) {
+      alert("No more previous folders or files.");
+      return;
+    }
+    pageCount.current -= 5; // Decrement page count
+
+    if (paginationStack.length > 0) {
+      const previousItems = paginationStack[paginationStack.length - 1]; // Get the last items from the stack
+      setCurrentItems(previousItems);
+      setPaginationStack((prevStack) => prevStack.slice(0, -1)); // Remove the last items from the stack
+    }
+    // documentMenuService
+    //   .getLibraryData(currentFolderPath, pageCount - 5)
+    //   .then((data) => {
+    //     console.log("Fetched library data:", data);
+    //     // setLibraryData(data);
+    //     setCurrentItems(data);
+    //   })
+    //   .catch((error) => console.error("Error fetching library data:", error));
+  };
 
   // Handle folder click
   const handleFolderClick = (folder: IDocumentItem) => {
     if (folder.items) {
-      setNavigationStack((prevStack) => [...prevStack, currentItems]); // Push the current level to the stack
+      pageCount.current = 0; // Reset page count when navigating to a folder
+      setNavigationStack((prevStack) => [...prevStack, folder.items ?? []]); // Push the current level to the stack
       setCurrentItems(folder.items);
       let newFolderName = folder.ServerRelativeUrl.split("/");
       setBreadCrumbItems((prevItems) => [
@@ -160,24 +197,21 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
         newFolderName[newFolderName.length - 1],
       ]); // Update breadcrumb items
       setCurrentFolderPath(folder.ServerRelativeUrl); // Set the current folder path
+      setPaginationStack([]);
     }
   };
 
   // Handle back navigation
-  const handleBackClick = () => {
-    if (navigationStack.length > 0) {
-      const previousLevel = navigationStack[navigationStack.length - 1]; // Get the previous level
-      setNavigationStack((prevStack) => prevStack.slice(0, -1)); // Pop the last level from the stack
-      setCurrentItems(previousLevel);
-      setCurrentFolderPath(currentFolderPath.split("/").slice(0, -1).join("/")); // Update the current folder path
-      setBreadCrumbItems((prevItems) => prevItems.slice(0, -1)); // Remove the last breadcrumb item
-    }
-  };
-
-  // const retrieveNextLevelItems = async () => {
-  //   try {
-
-  //   } catch (error) { console.error("Error fetching subfolder items:", error);}}
+  // const handleBackClick = () => {
+  //   if (navigationStack.length > 0) {
+  //     const previousLevel = navigationStack[navigationStack.length - 1]; // Get the previous level
+  //     setNavigationStack((prevStack) => prevStack.slice(0, -1)); // Pop the last level from the stack
+  //     setCurrentItems(previousLevel);
+  //     setCurrentFolderPath(currentFolderPath.split("/").slice(0, -1).join("/")); // Update the current folder path
+  //     setBreadCrumbItems((prevItems) => prevItems.slice(0, -1)); // Remove the last breadcrumb item
+  //     setActiveIconLayout("icon");
+  //   }
+  // };
 
   // Handle file creation
   // const handleCreateFile = async () => {
@@ -322,18 +356,29 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   // Render breadcrumb navigation
   const renderBreadcrumb = () => {
     // If there's no navigation, don't show anything
-    if (navigationStack.length === 0) {
+    if (navigationStack.length === 1) {
       return <div />;
     }
     return (
-      <React.Fragment>
+      <div className={styles.BreadCrumbNavContainer}>
         {breadCrumbItems.map((item, index) => (
-          <React.Fragment key={index}>
+          <div key={index}>
             {index > 0 && " > "}
-            <span onClick={() => handleBreadcrumbClick(index)}>{item}</span>
-          </React.Fragment>
+            <span
+              className={
+                index === breadCrumbItems.length - 1
+                  ? styles.BreadCrumbItemActive
+                  : styles.BreadCrumbItem
+              }
+              {...(index !== breadCrumbItems.length - 1
+                ? { onClick: () => handleBreadcrumbClick(index) }
+                : {})}
+            >
+              {item}
+            </span>
+          </div>
         ))}
-      </React.Fragment>
+      </div>
     );
   };
 
@@ -341,52 +386,106 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   const handleBreadcrumbClick = (index: number) => {
     // Navigate to a specific folder in the breadcrumb
     if (index == 0) {
+      if (props.layoutDropdownValue === "1") {
+        setActiveIconLayout("icon");
+      }
+      pageCount.current = 0; // Reset page count when navigating to the root
       setBreadCrumbItems(["Documents"]);
-      setNavigationStack([]);
       setCurrentItems(navigationStack[0]);
       setCurrentFolderPath(libraryName);
+      setNavigationStack((prevStack) => prevStack.slice(0, 1));
+      setPaginationStack([]); // Reset pagination stack
       return;
     } else {
       setCurrentItems(navigationStack[index]); // Get the items for the clicked level
       setBreadCrumbItems((prevItems) => prevItems.slice(0, index + 1)); // Keep only the levels up to the clicked breadcrumb
       setNavigationStack(
-        (prevStack) => prevStack.slice(0, index) // Keep only the levels up to the clicked breadcrumb
+        (prevStack) => prevStack.slice(0, index + 1) // Keep only the levels up to the clicked breadcrumb
       );
       let segments = currentFolderPath.split("/");
       let new_index = segments.indexOf(breadCrumbItems[index + 1]);
       setCurrentFolderPath(segments.slice(0, new_index).join("/"));
+      setPaginationStack([]); // Reset pagination stack
     }
   };
+
+  const debouncedSearch = React.useRef(
+    debounce((value: string, currentFolderPath: string) => {
+      setLoading(true);
+
+      if (!value || value.trim() === "") {
+        if (props.layoutDropdownValue === "1") {
+          documentMenuService
+            .getLibraryData(currentFolderPath, 0)
+            .then((data) => {
+              setCurrentItems(data);
+              setActiveIconLayout("icon");
+            })
+            .catch((error) =>
+              console.error("Error fetching library data:", error)
+            )
+            .finally(() => setLoading(false));
+          return;
+        } else {
+          documentMenuService
+            .getLibraryData(currentFolderPath, 0)
+            .then((data) => {
+              setCurrentItems(data);
+            })
+            .catch((error) =>
+              console.error("Error fetching library data:", error)
+            )
+            .finally(() => setLoading(false));
+          return;
+        }
+      }
+
+      if (props.layoutDropdownValue === "1") {
+        documentMenuService
+          .searchFilesAndFolders(value, currentFolderPath)
+          .then((results) => {
+            setActiveIconLayout("list");
+            setCurrentItems(results);
+          })
+          .catch((error) => {
+            console.error("Error searching files and folders:", error);
+          })
+          .finally(() => setLoading(false));
+      } else {
+        documentMenuService
+          .searchFilesAndFolders(value, currentFolderPath)
+          .then((results) => {
+            setCurrentItems(results);
+          })
+          .catch((error) => {
+            console.error("Error searching files and folders:", error);
+          })
+          .finally(() => setLoading(false));
+      }
+    }, 200)
+  ).current;
 
   const handlesearchValue = (value: string) => {
     setSearchValue(value);
-
-    if (!value) {
-      // If the search value is empty, reset to the original items
-      documentMenuService
-        .getLibraryData(currentFolderPath, 0)
-        .then((data) => {
-          setCurrentItems(data);
-        })
-        .catch((error) => console.error("Error fetching library data:", error));
-      return;
-    }
-
-    // Perform search
-    documentMenuService
-      .searchFilesAndFolders(value, currentFolderPath)
-      .then((results) => {
-        setCurrentItems(results);
-      })
-      .catch((error) => {
-        console.error("Error searching files and folders:", error);
-      });
-
-    // const filteredItems = currentItems.filter((item) =>
-    //   item.Name.toLowerCase().includes(value.toLowerCase())
-    // );
-    // setCurrentItems(filteredItems);
+    debouncedSearch(value, currentFolderPath);
   };
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  const handleSwitchToListView = () => {
+    setActiveIconLayout("list");
+  };
+
+  console.log("currentFolderPath:", currentFolderPath);
+  documentMenuService.getFieldsForUrl();
+  // console.log(props.layoutDropdownValue);
+  // console.log("paginationStack:", paginationStack);
+  // console.log("navigationStack:", navigationStack);
+  // console.log("breadcrumbItems:", breadCrumbItems);
 
   return (
     <div>
@@ -420,83 +519,92 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
                 >
                   ➕ Create Folder
                 </button> */}
-        {/* <div>
-          <button
-            // onClick={handlePreviousFolderFileSet}
-            style={{
-              marginRight: "10px",
-              background: "#FF9800",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            ⏪ Back
-          </button>
-          <button
-            // onClick={handleNextFolderFileSet}
-            style={{
-              background: "#FF9800",
-              color: "white",
-              border: "none",
-              padding: "10px 15px",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            ⏩ Next
-          </button>
-        </div> */}
         {/* Search Field */}
         <div className={styles.SearchField}>
           <TextField
             styles={searchFieldStyles}
             placeholder="Search..."
             value={searchValue}
-            onChange={(e, newValue) => handlesearchValue(newValue || "")}
+            onChange={(e, newValue) => {
+              handlesearchValue(newValue || "");
+              console.log(newValue);
+            }}
           />
+          {loading && (
+            <div className={styles.LoadingSpinner}>
+              <Spinner />
+            </div>
+          )}
         </div>
-        <div className={styles.ListTileLayoutButtons}>
-          <button
-            className={
-              activeListTileLayout === "list"
-                ? styles.ListButtonActive
-                : styles.ListButtonInactive
-            }
-            onClick={() => setActiveListTileLayout("list")}
-          ></button>
-          <button
-            className={
-              activeListTileLayout === "tile"
-                ? styles.TileButtonActive
-                : styles.TileButtonInactive
-            }
-            onClick={() => setActiveListTileLayout("tile")}
-          ></button>
-        </div>
+
+        {props.layoutDropdownValue === "2" ? (
+          <div className={styles.ListTileLayoutButtons}>
+            <button
+              className={
+                activeListTileLayout === "list"
+                  ? styles.ListButtonActive
+                  : styles.ListButtonInactive
+              }
+              onClick={() => setActiveListTileLayout("list")}
+            ></button>
+            <button
+              className={
+                activeListTileLayout === "tile"
+                  ? styles.TileButtonActive
+                  : styles.TileButtonInactive
+              }
+              onClick={() => setActiveListTileLayout("tile")}
+            ></button>
+          </div>
+        ) : null}
       </div>
-      <TileView
-        {...props}
-        currentItems={currentItems}
-        currentFolderPath={currentFolderPath}
-        navigationStack={navigationStack}
-        handleFolderClick={handleFolderClick}
-        getSharePointFileUrl={getSharePointFileUrl}
-        handleBackClick={handleBackClick}
-        renderBreadcrumb={renderBreadcrumb}
-      />
-      <ListView
-        {...props}
-        currentItems={currentItems}
-        currentFolderPath={currentFolderPath}
-        navigationStack={navigationStack}
-        handleFolderClick={handleFolderClick}
-        getSharePointFileUrl={getSharePointFileUrl}
-        handleBackClick={handleBackClick}
-        renderBreadcrumb={renderBreadcrumb}
-      />
+      <div className={styles.BreadCrumbNavSectionContainer}>
+        {renderBreadcrumb()}
+      </div>
+      {props.layoutDropdownValue === "1" ? (
+        activeIconLayout === "icon" && navigationStack.length === 1 ? (
+          <IconView
+            {...props}
+            currentItems={currentItems}
+            currentFolderPath={currentFolderPath}
+            handleFolderClick={handleFolderClick}
+            getSharePointFileUrl={getSharePointFileUrl}
+            onSwitchToListView={handleSwitchToListView}
+            handleNextFolderFileSet={handleNextFolderFileSet}
+            handlePreviousFolderFileSet={handlePreviousFolderFileSet}
+          />
+        ) : (
+          <ListView
+            {...props}
+            currentItems={currentItems}
+            currentFolderPath={currentFolderPath}
+            handleFolderClick={handleFolderClick}
+            getSharePointFileUrl={getSharePointFileUrl}
+          />
+        )
+      ) : (
+        <>
+          {activeListTileLayout === "tile" ? (
+            <TileView
+              {...props}
+              currentItems={currentItems}
+              currentFolderPath={currentFolderPath}
+              handleFolderClick={handleFolderClick}
+              getSharePointFileUrl={getSharePointFileUrl}
+              handleNextFolderFileSet={handleNextFolderFileSet}
+              handlePreviousFolderFileSet={handlePreviousFolderFileSet}
+            />
+          ) : (
+            <ListView
+              {...props}
+              currentItems={currentItems}
+              currentFolderPath={currentFolderPath}
+              handleFolderClick={handleFolderClick}
+              getSharePointFileUrl={getSharePointFileUrl}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -9,28 +9,18 @@ import styles from "./ListView.module.scss";
 interface IListViewProps extends IDocumentMenuProps {
   currentItems: IDocumentItem[];
   currentFolderPath: string;
-  navigationStack: IDocumentItem[][];
   handleFolderClick: (item: IDocumentItem) => void;
   getSharePointFileUrl: (url: string) => string;
-  handleBackClick: () => void;
-  renderBreadcrumb: () => JSX.Element;
 }
 
 export default function ListView(props: IListViewProps) {
-  const {
-    navigationStack,
-    currentItems,
-    handleFolderClick,
-    getSharePointFileUrl,
-    handleBackClick,
-    renderBreadcrumb,
-  } = props;
+  const { currentItems, handleFolderClick, getSharePointFileUrl } = props;
 
   //   const documentMenuService = new DocumentMenuService(props.context);
 
   return (
     <div className={styles.MainListViewContainer}>
-      <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
+      {/* <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
         {renderBreadcrumb()}
       </div>
       {navigationStack.length > 0 && (
@@ -46,7 +36,7 @@ export default function ListView(props: IListViewProps) {
         >
           🔙 Back
         </button>
-      )}
+      )} */}
       <div className={styles.ListViewContentContainer}>
         <table className={styles.ListTable}>
           <thead className={styles.ListTableHeader}>

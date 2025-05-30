@@ -22,6 +22,7 @@
     "@pnp/logging": "^4.11.0",
     "@pnp/sp": "^4.11.0",
     "@pnp/spfx-property-controls": "^3.19.0",
+    "lodash": "^4.17.21",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "tslib": "2.3.1"

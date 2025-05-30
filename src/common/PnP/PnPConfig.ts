@@ -14,11 +14,16 @@ import "@pnp/sp/site-users/web";
 import "@pnp/sp/site-groups";
 let _sp: SPFI;
 
-export const getSP = (context?: WebPartContext): SPFI => {
+export const getSP = (
+  context?: WebPartContext,
+  siteCollectionUrl?: string
+): SPFI => {
   if (context !== undefined) {
     //You must add the @pnp/logging package to include the PnPLogging behavior it is no longer a peer dependency
     // The LogLevel set's at what level a message will be written to the console
-    _sp = spfi().using(SPFx(context)).using(PnPLogging(LogLevel.Warning));
+    _sp = spfi(siteCollectionUrl)
+      .using(SPFx(context))
+      .using(PnPLogging(LogLevel.Warning));
   }
   return _sp;
 };

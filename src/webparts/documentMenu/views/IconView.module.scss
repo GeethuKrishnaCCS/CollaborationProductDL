@@ -1,0 +1,98 @@
+.MainIconViewContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.IconViewContentContainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.IconViewFolderContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.ItemContainer {
+  height: 250px;
+  width: 100%;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.ItemContainer:nth-child(even) {
+  background-color: #4fd7c4;
+}
+
+.ItemContainer:nth-child(odd) {
+  background-color: #03787c;
+}
+
+.FolderIconContainer {
+  height: 100%;
+  width: 100%;
+
+  .FolderIcon {
+    height: 80%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  .FolderName {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 300;
+    color: white;
+  }
+}
+
+.FileContainer {
+  height: 100%;
+  width: 100%;
+}
+
+.FileName {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.ArrowPrevious,
+.ArrowNext {
+  height: 100px;
+  width: 40px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 80%;
+  // position: relative;
+  border: none;
+  border-radius: 5px;
+  background-color: #e7fbfa;
+  // padding: 10px 15px;
+  cursor: pointer;
+}
+
+.ArrowNext {
+  background-image: url("../assets/right-arrow.png");
+}
+
+.ArrowPrevious {
+  background-image: url("../assets/left-arrow.png");
+}

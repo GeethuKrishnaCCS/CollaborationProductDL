@@ -10,32 +10,31 @@ import {
 interface ITileViewProps extends IDocumentMenuProps {
   currentItems: IDocumentItem[];
   currentFolderPath: string;
-  navigationStack: IDocumentItem[][];
   handleFolderClick: (item: IDocumentItem) => void;
   getSharePointFileUrl: (url: string) => string;
-  handleBackClick: () => void;
-  renderBreadcrumb: () => JSX.Element;
+  handleNextFolderFileSet?: () => void;
+  handlePreviousFolderFileSet?: () => void;
 }
 
 export default function TileView(props: ITileViewProps) {
   const {
-    navigationStack,
     currentItems,
     handleFolderClick,
     getSharePointFileUrl,
-    handleBackClick,
-    renderBreadcrumb,
+    handleNextFolderFileSet,
+    handlePreviousFolderFileSet,
   } = props;
   const documentMenuService = new DocumentMenuService(props.context);
 
-  const FileCount = ({ folderUrl }: { folderUrl: string }) => {
+  const FileCount = (item: IDocumentItem) => {
     const [fileCount, setFileCount] = useState<number | null>(null);
+    // console.log("item", item);
 
     useEffect(() => {
       const fetchFileCount = async () => {
         try {
           const count = await documentMenuService.getFileCountInFolder(
-            folderUrl
+            item || []
           );
           setFileCount(count);
         } catch (error) {
@@ -45,15 +44,14 @@ export default function TileView(props: ITileViewProps) {
       };
 
       fetchFileCount();
-    }, [currentItems]);
+    }, []);
 
     return <span>{fileCount !== null ? fileCount : "..."}</span>; // Show "..." while loading
   };
 
   return (
     <div className={styles.MainTileViewContainer}>
-      {/* {showModal && renderModal()} */}
-      <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
+      {/* <div style={{ marginBottom: "10px", fontSize: "14px", color: "#333" }}>
         {renderBreadcrumb()}
       </div>
       {navigationStack.length > 0 && (
@@ -69,17 +67,24 @@ export default function TileView(props: ITileViewProps) {
         >
           🔙 Back
         </button>
-      )}
+      )} */}
       <div className={styles.TileViewContentContainer}>
         <button
-          // onClick={handlePreviousFolderFileSet}
+          onClick={handlePreviousFolderFileSet}
           className={styles.ArrowPrevious}
         ></button>
-        <div className={styles.FolderAndFileContainer}>
+        <div
+          className={styles.FolderAndFileContainer}
+          style={{ gridTemplateColumns: `repeat(${props.itemsRowCount}, 1fr)` }}
+        >
           {currentItems.map((item, index) => (
             <div
               key={index}
               className={styles.ItemContainer}
+              style={{
+                height: `${props.heightSliderValue}px`,
+                width: `${props.widthSliderValue}px`,
+              }}
               onClick={() => item.items && handleFolderClick(item)}
             >
               {item.folder ? (
@@ -88,7 +93,7 @@ export default function TileView(props: ITileViewProps) {
                     <div className={styles.FolderIcon}>
                       <span className={styles.FileCount}>
                         {/* Dynamically fetch and display file count */}
-                        <FileCount folderUrl={item.ServerRelativeUrl} />
+                        <FileCount {...item} />
                       </span>{" "}
                     </div>
                     <div className={styles.FolderName}>{item.Name}</div>
@@ -117,7 +122,7 @@ export default function TileView(props: ITileViewProps) {
           ))}
         </div>
         <button
-          // onClick={handleNextFolderFileSet}
+          onClick={handleNextFolderFileSet}
           className={styles.ArrowNext}
         ></button>
       </div>
