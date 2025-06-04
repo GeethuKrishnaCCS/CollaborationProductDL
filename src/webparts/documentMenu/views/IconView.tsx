@@ -72,13 +72,20 @@ export default function IconView(props: IIconViewProps) {
             >
               {item.folder ? (
                 <>
-                  <div className={styles.FolderIconContainer}>
+                  <div
+                    className={styles.FolderIconContainer}
+                    style={{
+                      backgroundColor: props.itemColors[item.Name] || "#4FD7C4",
+                      borderRadius: "30px",
+                      cursor: "pointer",
+                    }}
+                  >
                     <div className={styles.FolderIcon}>
                       <Icon
                         iconName={props.itemIcons[item.Name] || "Folder"}
                         style={{
                           fontSize: 75,
-                          color: props.itemColors[item.Name] || "#ffffff",
+                          color: "#ffffff",
                         }}
                       />
                     </div>

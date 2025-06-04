@@ -80,6 +80,8 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
   // const baseService = new BaseService(props.context);
   const pageCount = useRef(0);
 
+  //Initial library data and current items.
+  //Triggers when documentLibraryUrl or siteCollectionUrl changes
   useEffect(() => {
     console.log(
       "libraryName:",
@@ -120,6 +122,35 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     // documentMenuService.searchFilesAndFolders();
   }, [props.documentLibraryUrl, props.siteCollectionUrl]);
 
+  // Fetch distinct category values when categoryDropdownValue changes
+  useEffect(() => {
+    documentMenuService
+      .getCategoryDistinctValues(props.documentLibraryUrl, "Department")
+      .then(async (distinctCategoryValues) => {
+        // Create an array of promises to fetch files for each category
+        const categoryResults = await Promise.all(
+          distinctCategoryValues.map(async (value: any) => {
+            const files = await documentMenuService.getCategoryValueFiles(
+              props.documentLibraryUrl,
+              value
+            );
+            console.log("documentUrl", props.documentLibraryUrl);
+            return {
+              Name: value,
+              items: files, // Attach the files here
+              folder: true,
+            };
+          })
+        );
+        console.log("Mapped category results:", categoryResults);
+        // You can now set this to state if you want to display it
+        // setCurrentItems(categoryResults);g
+      });
+  }, [props.categoryDropdownValue]);
+
+  // Fetch folder data for each item in currentItems
+  // This effect runs when currentItems changes, fetching data for folders
+  // User doesnt have to wait for another api call to fetch folder data
   useEffect(() => {
     const fetchFolderData = async () => {
       if (currentItems) {
@@ -409,6 +440,7 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     }
   };
 
+  // Debounced search function to slow down search requests and not skip
   const debouncedSearch = React.useRef(
     debounce((value: string, currentFolderPath: string) => {
       setLoading(true);
@@ -480,12 +512,18 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
     setActiveIconLayout("list");
   };
 
-  console.log("currentFolderPath:", currentFolderPath);
-  documentMenuService.getFieldsForUrl();
+  // console.log("currentFolderPath:", currentFolderPath);
+  // // documentMenuService.getFieldsForUrl(props.documentLibraryUrl);
+  // documentMenuService.getCategoryDistinctValues(
+  //   props.documentLibraryUrl,
+  //   "Department"
+  // );
+  // documentMenuService.getCategoryValueFiles(props.documentLibraryUrl, "HR");
   // console.log(props.layoutDropdownValue);
   // console.log("paginationStack:", paginationStack);
   // console.log("navigationStack:", navigationStack);
   // console.log("breadcrumbItems:", breadCrumbItems);
+  console.log("currentItems:", currentItems);
 
   return (
     <div>

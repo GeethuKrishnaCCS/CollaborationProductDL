@@ -31,6 +31,7 @@ export interface IDocumentMenuWebPartProps {
   widthSliderValue?: number;
   itemIcons: { [key: string]: string };
   itemColors: { [key: string]: string };
+  categoryDropdownValue: string;
 }
 
 export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocumentMenuWebPartProps> {
@@ -39,6 +40,7 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
   private _libraryOptions: (IPropertyPaneDropdownOption & {
     serverRelativeUrl: string;
   })[] = [];
+  private _categoryDropdownOptions: IPropertyPaneDropdownOption[] = [];
   private _activeIconLayout: string = "icon";
   private _navigationStackLength: number = 0;
 
@@ -70,6 +72,7 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
         heightSliderValue: this.properties.heightSliderValue,
         widthSliderValue: this.properties.widthSliderValue,
         itemColors: this.properties.itemColors,
+        categoryDropdownValue: this.properties.categoryDropdownValue,
       }
     );
 
@@ -97,6 +100,12 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
             this.context.propertyPane.refresh();
           }
         });
+    }
+
+    if (this.properties.documentLibraryUrl) {
+      this._categoryDropdownOptions = await this._service.getFieldsForUrl(
+        this.properties.documentLibraryUrl
+      );
     }
 
     return Promise.resolve();
@@ -263,6 +272,12 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
                 //     }
                 //   },
                 // }),
+                PropertyPaneDropdown("categoryDropdown", {
+                  label: "Select a Category",
+                  options: this._categoryDropdownOptions,
+                  selectedKey: this.properties.categoryDropdownValue,
+                  disabled: this.properties.siteCollectionUrl === "",
+                }),
                 PropertyPaneTextField("itemsRowCount", {
                   label: "Items-Row Count",
                   description: "Number of items in each row",

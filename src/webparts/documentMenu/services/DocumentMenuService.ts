@@ -6,7 +6,12 @@ import { FolderItem } from "../../../common/interfaces";
 import "@pnp/sp/search";
 import "@pnp/sp/sites";
 import "@pnp/sp/batching";
+import "@pnp/sp/lists";
+import "@pnp/sp/views";
+import "@pnp/sp/fields";
+import { IView } from "@pnp/sp/views/types";
 import { IDocumentItem } from "../interfaces/IDocumentMenuProps";
+// import { IFieldInfo } from "@pnp/sp/fields/types";
 
 // import { spfi } from "@pnp/sp";
 
@@ -68,8 +73,8 @@ export class DocumentMenuService extends BaseService {
       folder.files.top(5)(),
     ]);
 
-    console.log("subfolders", subfolders);
-    console.log("files", files);
+    // console.log("subfolders", subfolders);
+    // console.log("files", files);
 
     let allItems: FolderItem[] = files.map((file: any) => ({
       Name: file.Name,
@@ -154,9 +159,9 @@ export class DocumentMenuService extends BaseService {
     // Using Promise.all for parallel processing of initial folders:
     const processingPromises = async () => {
       try {
-        console.log(
-          `Processing folder: ${initialFolderItems.ServerRelativeUrl}`
-        );
+        // console.log(
+        //   `Processing folder: ${initialFolderItems.ServerRelativeUrl}`
+        // );
         const count = await this._getRecursiveFileCountInFolder(
           initialFolderItems.ServerRelativeUrl
         );
@@ -230,7 +235,7 @@ export class DocumentMenuService extends BaseService {
       ],
       TrimDuplicates: false,
     });
-    // console.log("Primary results:", results.PrimarySearchResults);
+    console.log("Primary results:", results.PrimarySearchResults);
 
     const formattedResults = await Promise.all(
       results.PrimarySearchResults.map(async (item) => {
@@ -285,18 +290,66 @@ export class DocumentMenuService extends BaseService {
     }
   }
 
-  public async getFieldsForUrl(): Promise<any[]> {
+  public async getFieldsForUrl(documentLibraryUrl: string): Promise<any[]> {
     try {
-      const item = await this.spfi.web
-        .getFileByServerRelativePath(
-          "/sites/ProductDevelopment/Shared Documents/Applications/Book1.xlsx"
-        )
-        .listItemAllFields();
-      console.log("item", item);
-      return Object.keys(item).map((key) => ({
-        field: key,
-        value: item[key],
+      const list = this.spfi.web.getList(documentLibraryUrl);
+      const defaultViewInstance: IView = list.defaultView;
+      const viewFieldInternalNames: any = await defaultViewInstance.fields();
+      const options = viewFieldInternalNames.Items.filter(
+        (field: any) =>
+          !["DocIcon", "LinkFilename", "Modified", "Editor"].includes(field)
+      ).map((field: any, idx: number) => ({
+        key: String(idx + 1),
+        text: field, // or field.InternalName if you want the internal name
       }));
+      console.log("viewFieldInternalNames", options);
+      return options;
+    } catch (error) {
+      console.error("Error retrieving fields for URL:", error);
+      throw error;
+    }
+  }
+
+  public async getCategoryDistinctValues(
+    documentLibraryUrl: string,
+    category: string
+  ): Promise<any> {
+    const list = this.spfi.web.getList(documentLibraryUrl);
+    const items = await list.items.select(category).top(5000)(); // Adjust RowLimit as needed
+
+    // Extract and deduplicate values
+    const values = items.map((item) => item[category]).filter((v) => v != null);
+    console.log("Category values:", Array.from(new Set(values)));
+    return Array.from(new Set(values));
+  }
+
+  public async getCategoryValueFiles(
+    documentLibraryUrl: string,
+    categoryValue: string
+  ): Promise<any> {
+    try {
+      const list = this.spfi.web.getList(documentLibraryUrl);
+
+      // Get all items with the Department field and file info
+      const items = await list.items
+        .select(
+          "Id",
+          "Title",
+          "File/Name",
+          "File/ServerRelativeUrl",
+          "File/TimeLastModified",
+          "Department"
+        )
+        .expand("File")
+        .top(5000)();
+
+      // Filter to only files where Department matches the value (e.g., "HR")
+      const filteredFiles = items.filter(
+        (item) => item.Department === categoryValue
+      );
+      const filesOnly = filteredFiles.map((item) => item.File);
+      console.log("Filtered files:", filesOnly);
+      return filesOnly;
     } catch (error) {
       console.error("Error retrieving fields for URL:", error);
       throw error;

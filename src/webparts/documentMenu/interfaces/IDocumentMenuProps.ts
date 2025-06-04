@@ -17,6 +17,7 @@ export interface IDocumentMenuProps {
   widthSliderValue?: number;
   itemIcons: { [key: string]: string };
   itemColors: { [key: string]: string };
+  categoryDropdownValue: string;
 }
 
 // This interface is used to define the structure of the document item
