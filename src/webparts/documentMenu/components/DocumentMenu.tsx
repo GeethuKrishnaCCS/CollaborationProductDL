@@ -143,8 +143,8 @@ export default function DocumentMenu(props: IDocumentMenuProps) {
           })
         );
         console.log("Mapped category results:", categoryResults);
-        // You can now set this to state if you want to display it
-        // setCurrentItems(categoryResults);g
+        // Set the current items to the category results
+        // setCurrentItems(categoryResults);
       });
   }, [props.categoryDropdownValue]);
 

@@ -48,12 +48,14 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
     const element: React.ReactElement<IDocumentMenuProps> = React.createElement(
       DocumentMenu,
       {
+        // This function is called when the current items change
         onCurrentItemsChange: (items) => {
           this._currentItems = items;
           if (this.context.propertyPane.isPropertyPaneOpen()) {
             this.context.propertyPane.refresh();
           }
         },
+        // This function is called when the active icon layout change
         onLayoutStateChange: (activeIconLayout, navigationStackLength) => {
           this._activeIconLayout = activeIconLayout;
           this._navigationStackLength = navigationStackLength;
@@ -129,17 +131,7 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
       // this.properties.documentLibraryUrl = "";
 
       if (newValue === "") {
-        // this.properties.documentLibraryUrl = "";
         this._libraryOptions = [];
-        // this._activeIconLayout = "icon";
-        // this._navigationStackLength = 0;
-
-        // Re-render the web part to update the UI
-        // this.render();
-        // Refresh property pane if open
-        // if (this.context.propertyPane.isPropertyPaneOpen()) {
-        //   this.context.propertyPane.refresh();
-        // }
       } else {
         this._service.getLibraryOptions(newValue).then((libs: any[]) => {
           this._libraryOptions = libs.map((lib: any) => ({
@@ -175,6 +167,7 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
       { key: "2", text: "Tiles" },
     ];
 
+    //Define item icon fields based on the current layout
     const itemIconFields =
       this._currentItems &&
       this._currentItems.length > 0 &&
@@ -203,6 +196,7 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
             )
         : [];
 
+    // Define item colors for the icon layout
     const itemIconColors =
       this._currentItems &&
       this._currentItems.length > 0 &&
@@ -240,9 +234,6 @@ export default class DocumentMenuWebPart extends BaseClientSideWebPart<IDocument
             {
               // groupName: strings.BasicGroupName,
               groupFields: [
-                // PropertyPaneTextField("description", {
-                //   label: strings.DescriptionFieldLabel,
-                // }),
                 PropertyPaneTextField("siteCollectionUrl", {
                   // Add this block
                   label: "Site Collection URL",

@@ -210,6 +210,7 @@ export class DocumentMenuService extends BaseService {
   //   throw error;
   // }
 
+  //Search for files and folders by filename in a specific folder
   public async searchFilesAndFolders(
     filename: string,
     currentFolderPath: string
@@ -343,7 +344,7 @@ export class DocumentMenuService extends BaseService {
         .expand("File")
         .top(5000)();
 
-      // Filter to only files where Department matches the value (e.g., "HR")
+      // Filter to only files where Department matches the value
       const filteredFiles = items.filter(
         (item) => item.Department === categoryValue
       );
